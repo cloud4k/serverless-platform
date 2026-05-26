@@ -5,7 +5,6 @@
 crash.log
 override.tf
 override.tf.json
-*.tfvars
 
 # Node
 node_modules/

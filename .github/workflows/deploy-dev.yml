@@ -3,16 +3,12 @@ name: Deploy Dev
 on:
   push:
     branches:
-      - dev
+      - main
   workflow_dispatch:
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: infrastructure/terraform
 
     steps:
       - name: Checkout code
@@ -27,15 +23,49 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Terraform Init
+        working-directory: infrastructure/terraform
         run: terraform init
 
       - name: Terraform Validate
+        working-directory: infrastructure/terraform
         run: terraform validate
 
       - name: Terraform Plan
+        working-directory: infrastructure/terraform
         run: terraform plan -var-file="environments/dev/dev.tfvars"
 
       - name: Terraform Apply
+        working-directory: infrastructure/terraform
         run: terraform apply -auto-approve -var-file="environments/dev/dev.tfvars"
+
+      - name: Get Terraform Outputs
+        working-directory: infrastructure/terraform
+        run: |
+          echo "FRONTEND_BUCKET=$(terraform output -raw frontend_bucket_name)" >> $GITHUB_ENV
+          echo "CLOUDFRONT_DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_ENV
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend/app
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend/app
+        run: npm run build
+
+      - name: Deploy Frontend To S3
+        run: aws s3 sync frontend/app/dist s3://$FRONTEND_BUCKET --delete
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+            --paths "/*"

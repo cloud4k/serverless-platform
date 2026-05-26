@@ -1,0 +1,40 @@
+name: Destroy Dev
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy-dev:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install Create Inspection Lambda Dependencies
+        working-directory: backend/create-inspection
+        run: npm ci
+
+      - name: Install Worker Lambda Dependencies
+        working-directory: backend/worker
+        run: npm ci
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: infrastructure/terraform
+        run: terraform init
+
+      - name: Terraform Destroy
+        working-directory: infrastructure/terraform
+        run: terraform destroy -auto-approve -var-file="environments/dev/dev.tfvars"

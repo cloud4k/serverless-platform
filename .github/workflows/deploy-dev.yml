@@ -25,6 +25,13 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
+      - name: Install Create Inspection Lambda Dependencies
+        working-directory: backend/create-inspection
+        run: npm ci
+
+      - name: Install Worker Lambda Dependencies
+        working-directory: backend/worker
+        run: npm ci
 
       - name: Terraform Init
         working-directory: infrastructure/terraform

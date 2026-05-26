@@ -20,6 +20,8 @@ resource "aws_lambda_function" "create_inspection_lambda" {
       TABLE_NAME    = var.dynamodb_table_name
       QUEUE_URL     = var.sqs_queue_url
       UPLOAD_BUCKET = var.upload_bucket_name
+      SNS_TOPIC_ARN = var.sns_topic_arn
+
     }
   }
   vpc_config {
@@ -54,6 +56,7 @@ resource "aws_lambda_function" "worker_lambda" {
       TABLE_NAME    = var.dynamodb_table_name
       QUEUE_URL     = var.sqs_queue_url
       UPLOAD_BUCKET = var.upload_bucket_name
+      SNS_TOPIC_ARN = var.sns_topic_arn
     }
   }
   vpc_config {

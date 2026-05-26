@@ -12,7 +12,7 @@ export default function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState("");
 
-  const API_BASE_URL = "https://mbofysjuse.execute-api.us-east-1.amazonaws.com";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const handleChange = (e) => {
     setFormData({
